@@ -2,9 +2,11 @@
 # This script is a Git hook that generates commit messages using locally/server running model based on the staged changes.
 # ASTRA AI (mockup name) is any local/server running model from ollama/hugging face, so you need to have it set up and running before using this hook.
 
-# Configuration
-MODEL=MODEL_NAME
-API_URL=API_URL_HERE
+# --- Configuration ---
+MODEL="MODEL_NAME_HERE"
+API_URL="API_URL_HERE"
+# ---------------------
+
 STAGED_DIFF=$(git diff --cached)
 
 if [ -z "$STAGED_DIFF" ]; then
