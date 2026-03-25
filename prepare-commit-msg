@@ -1,0 +1,46 @@
+#!/bin/sh
+# This script is a Git hook that generates commit messages using locally/server running model based on the staged changes.
+
+# Configuration
+MODEL=MODEL_NAME
+API_URL=API_URL_HERE
+STAGED_DIFF=$(git diff --cached)
+
+if [ -z "$STAGED_DIFF" ]; then
+  exit 0
+fi
+
+echo "🤖 Analyzing staged changes with Astra AI..."
+
+SYSTEM_PROMPT="You are an expert software engineer writing Git commit messages. Analyze the provided git diff and generate a commit message following the Conventional Commits specification. Rules: 1. Format: <type>: <subject> 2. Types allowed: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert. 3. The subject must be written in the imperative mood, lowercase, and no longer than 50 characters. 4. Do not end the subject line with a period. 5. Provide a short, bulleted body explaining WHAT and WHY, not HOW. 6. Return ONLY the commit message. No conversational text."
+
+JSON_PAYLOAD=$(jq -n \
+  --arg model "$MODEL" \
+  --arg sys "$SYSTEM_PROMPT" \
+  --arg user "$STAGED_DIFF" \
+  '{
+    model: $model,
+    messages: [
+      {role: "system", content: $sys},
+      {role: "user", content: $user}
+    ],
+    stream: false
+  }')
+
+echo "📡 Sending data to Astra AI for commit message generation..."
+
+AI_RESPONSE=$(curl -s -X POST "${API_URL}" \
+  -H "Content-Type: application/json" \
+  -d "$JSON_PAYLOAD" | jq -r '.message.content')
+
+echo "📥 Received response from Astra AI." $AI_RESPONSE
+
+if [ -n "$AI_RESPONSE" ] && [ "$AI_RESPONSE" != "null" ]; then
+  echo "✅ Commit message generated!"
+
+  echo "$AI_RESPONSE" > "$1"
+  exit 0
+else
+  echo "❌ Failed to generate commit message. Check your Astra server."
+  exit 1
+fi
