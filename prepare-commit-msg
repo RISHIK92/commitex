@@ -34,7 +34,7 @@ AI_RESPONSE=$(curl -s -X POST "${API_URL}" \
   -H "Content-Type: application/json" \
   -d "$JSON_PAYLOAD" | jq -r '.message.content')
 
-echo "📥 Received response from Astra AI." $AI_RESPONSE
+echo "📥 Received response from Astra AI."
 
 if [ -n "$AI_RESPONSE" ] && [ "$AI_RESPONSE" != "null" ]; then
   echo "✅ Commit message generated!"
